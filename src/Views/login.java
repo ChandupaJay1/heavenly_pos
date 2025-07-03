@@ -26,6 +26,28 @@ public class login extends javax.swing.JFrame {
         datetime();
         setLocationRelativeTo(null);
         jTextField1.grabFocus();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                confirmExit();
+            }
+        });
+    }
+
+    private void confirmExit() {
+        int option = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to exit the program?",
+                "Exit Confirmation",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (option == JOptionPane.YES_OPTION) {
+            dispose(); // Close login window
+            System.exit(0); // Terminate program
+        }
     }
 
     /**
@@ -107,7 +129,7 @@ public class login extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        closeconfirm();
+        jButton1.addActionListener(e -> confirmExit());
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
@@ -227,8 +249,7 @@ public class login extends javax.swing.JFrame {
             }
         }
     }
-    
-    
+
     Date d;
     SimpleDateFormat sdf;
 
