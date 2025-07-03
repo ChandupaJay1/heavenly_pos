@@ -202,12 +202,13 @@ public class login extends javax.swing.JFrame {
     private javax.swing.JLabel txttime;
     // End of variables declaration//GEN-END:variables
 
-    private void closeconfirm() {
-        int a = JOptionPane.showConfirmDialog(this, "Sure to close?", "Confirmation", JOptionPane.YES_NO_OPTION);
-        if (a == 0) {
-            this.dispose();
-        }
+private void closeconfirm() {
+    int a = JOptionPane.showConfirmDialog(this, "Are you sure you want to exit?", "Confirmation", JOptionPane.YES_NO_OPTION);
+    if (a == JOptionPane.YES_OPTION) {
+        this.dispose(); // Close the window
+        System.exit(0); // Terminate the JVM
     }
+}
 
     private void loginmethod() {
         if (jTextField1.getText().isEmpty()) {

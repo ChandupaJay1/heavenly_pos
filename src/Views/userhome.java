@@ -585,11 +585,12 @@ public class userhome extends javax.swing.JFrame {
             // Register fonts and set properties
             registerCustomFonts();
 
-            // Calculate values
-            double subtotal = Double.parseDouble(jTextField4.getText());
+// Calculate values
+            double subtotal = Double.parseDouble(jTextField4.getText()); // This is the sum without service charge
             double serviceCharge = subtotal * 0.10;
             double totalDue = subtotal + serviceCharge;
             double paidAmount = Double.parseDouble(jTextField5.getText());
+            double balance = paidAmount - totalDue;
 
             if (paidAmount < totalDue) {
                 JOptionPane.showMessageDialog(this,
@@ -604,29 +605,24 @@ public class userhome extends javax.swing.JFrame {
                 return;
             }
 
-            // Prepare report parameters - convert all numeric values to strings
+            // Prepare report parameters - Parameter1 is now the subtotal WITHOUT service charge
             Map<String, Object> parameters = new HashMap<>();
+            parameters.put("Parameter1", String.format("%.2f", subtotal)); // Subtotal without service charge
+            parameters.put("Parameter2", String.format("%.2f", serviceCharge)); // Service charge
+            parameters.put("Parameter3", String.format("%.2f", totalDue)); // Total due (subtotal + service charge)
+            parameters.put("Parameter4", String.format("%.2f", paidAmount)); // Paid amount
+            parameters.put("Parameter5", String.format("%.2f", balance)); // Balance
             parameters.put("Parameter6", jTextField3.getText()); // Invoice number
             parameters.put("Parameter9", txtdate.getText() + " " + txttime.getText()); // Date/time
-
-            // Convert numeric values to formatted strings
-            parameters.put("Parameter1", String.format("%.2f", totalDue));
-            parameters.put("Parameter2", String.format("%.2f", serviceCharge));
-            parameters.put("Parameter4", String.format("%.2f", paidAmount));
 
             // Create data source
             JRDataSource dataSource = new JRTableModelDataSource(model);
 
             // Load report template with better error handling
-            InputStream reportStream = null;
-            try {
-                reportStream = getClass().getResourceAsStream("/reports/heavenly.jasper");
-                if (reportStream == null) {
-                    reportStream = new FileInputStream("reports/heavenly.jasper");
-                }
-            } catch (Exception e) {
+            InputStream reportStream = getReportStream();
+            if (reportStream == null) {
                 JOptionPane.showMessageDialog(this,
-                        "Report template not found: " + e.getMessage(),
+                        "Report template not found",
                         "Report Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
@@ -652,8 +648,11 @@ public class userhome extends javax.swing.JFrame {
                 if (reportStream != null) {
                     try {
                         reportStream.close();
-                    } catch (IOException e) {
-                        System.err.println("Error closing report stream: " + e.getMessage());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        JOptionPane.showMessageDialog(this,
+                                "Error generating report: " + e.getMessage(),
+                                "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
