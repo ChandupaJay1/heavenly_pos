@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Create this file: src/fonts/poppins.xml -->
+<fontFamilies>
+    <fontFamily name="Poppins">
+        <normal>fonts/Poppins-Regular.ttf</normal>
+        <bold>fonts/Poppins-Bold.ttf</bold>
+        <italic>fonts/Poppins-Italic.ttf</italic>
+        <boldItalic>fonts/Poppins-BoldItalic.ttf</boldItalic>
+        <pdfEncoding>Identity-H</pdfEncoding>
+        <pdfEmbedded>true</pdfEmbedded>
+    </fontFamily>
+</fontFamilies>
