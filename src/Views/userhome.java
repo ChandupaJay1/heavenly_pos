@@ -799,11 +799,16 @@ public class userhome extends javax.swing.JFrame {
     }
 
     private void closeconfirm() {
-        int a = JOptionPane.showConfirmDialog(this, "Sure to close?", "Confirmation", JOptionPane.YES_NO_OPTION);
-        if (a == 0) {
-            this.dispose();
-            login l = new login(); // Assuming 'login' class exists in 'Views' package
-            l.setVisible(true);
+        int option = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to logout?",
+                "Confirmation",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (option == JOptionPane.YES_OPTION) {
+            this.dispose(); // Close current window
+            new login().setVisible(true); // Open login window
         }
     }
 
