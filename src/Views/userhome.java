@@ -28,7 +28,12 @@ import javax.swing.Timer;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Arrays;
+import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRParameter;
 
 public class userhome extends javax.swing.JFrame {
@@ -572,7 +577,6 @@ public class userhome extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_jTextField5ActionPerformed
-
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
         DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
         if (model.getRowCount() == 0) {
@@ -582,16 +586,17 @@ public class userhome extends javax.swing.JFrame {
         }
 
         try {
-            // Register fonts and set properties
+            // Register custom fonts for the report
             registerCustomFonts();
 
-// Calculate values
-            double subtotal = Double.parseDouble(jTextField4.getText()); // This is the sum without service charge
+            // Calculate financial values
+            double subtotal = Double.parseDouble(jTextField4.getText());
             double serviceCharge = subtotal * 0.10;
             double totalDue = subtotal + serviceCharge;
             double paidAmount = Double.parseDouble(jTextField5.getText());
             double balance = paidAmount - totalDue;
 
+            // Validate payment
             if (paidAmount < totalDue) {
                 JOptionPane.showMessageDialog(this,
                         "Paid amount is less than the total due (" + String.format("%.2f", totalDue) + ").",
@@ -599,26 +604,72 @@ public class userhome extends javax.swing.JFrame {
                 return;
             }
 
+            // Save invoice to database
             if (!saveInvoice()) {
                 JOptionPane.showMessageDialog(this, "Failed to save invoice data.",
                         "Save Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            // Prepare report parameters - Parameter1 is now the subtotal WITHOUT service charge
+            // Prepare report parameters
             Map<String, Object> parameters = new HashMap<>();
-            parameters.put("Parameter1", String.format("%.2f", subtotal)); // Subtotal without service charge
-            parameters.put("Parameter2", String.format("%.2f", serviceCharge)); // Service charge
-            parameters.put("Parameter3", String.format("%.2f", totalDue)); // Total due (subtotal + service charge)
-            parameters.put("Parameter4", String.format("%.2f", paidAmount)); // Paid amount
-            parameters.put("Parameter5", String.format("%.2f", balance)); // Balance
-            parameters.put("Parameter6", jTextField3.getText()); // Invoice number
-            parameters.put("Parameter9", txtdate.getText() + " " + txttime.getText()); // Date/time
+            parameters.put("Parameter1", String.format("%.2f", subtotal));  // Subtotal
+            parameters.put("Parameter2", String.format("%.2f", serviceCharge));  // Service charge
+            parameters.put("Parameter3", String.format("%.2f", totalDue));  // Total due
+            parameters.put("Parameter4", String.format("%.2f", paidAmount));  // Paid amount
+            parameters.put("Parameter5", String.format("%.2f", balance));  // Balance
+            parameters.put("Parameter6", jTextField3.getText());  // Invoice number
+            parameters.put("Parameter9", txtdate.getText() + " " + txttime.getText());  // Date and time
+            parameters.put(JRParameter.IS_IGNORE_PAGINATION, Boolean.TRUE);  // Pagination control
+
+            // Create data model for the report with exact field names
+            DefaultTableModel reportModel = new DefaultTableModel(
+                    new Object[][]{},
+                    new String[]{"Category", "Name", "Portion", "Count", "Price", "Total Price"}
+            ) {
+                @Override
+                public Class<?> getColumnClass(int columnIndex) {
+                    // Properly define column classes for correct formatting in report
+                    switch (columnIndex) {
+                        case 3: return Integer.class;    // Count
+                        case 4:
+                        case 5: return Double.class;     // Price and Total Price
+                        default: return String.class;    // All other columns
+                    }
+                }
+            };
+
+            // Populate the report model with data
+            for (int i = 0; i < model.getRowCount(); i++) {
+                String productId = model.getValueAt(i, 0).toString();
+                String productName = model.getValueAt(i, 1).toString();
+                String portion = model.getValueAt(i, 2).toString();
+                int count = Integer.parseInt(model.getValueAt(i, 3).toString());
+                double price = Double.parseDouble(model.getValueAt(i, 4).toString());
+                double totalPrice = Double.parseDouble(model.getValueAt(i, 5).toString());
+
+                String category = findCategoryForProduct(productId);
+
+                reportModel.addRow(new Object[]{
+                        category,
+                        productName,
+                        portion,
+                        count,
+                        price,
+                        totalPrice
+                });
+            }
+
+            // Debug: Print the report model to console
+            System.out.println("Report Data:");
+            for (int i = 0; i < reportModel.getRowCount(); i++) {
+                System.out.println(Arrays.toString(reportModel.getDataVector().elementAt(i).toArray()));
+            }
 
             // Create data source
-            JRDataSource dataSource = new JRTableModelDataSource(model);
+            JRDataSource dataSource = new JRTableModelDataSource(reportModel);
 
-            // Load report template with better error handling
+            // Load report template
             InputStream reportStream = getReportStream();
             if (reportStream == null) {
                 JOptionPane.showMessageDialog(this,
@@ -627,8 +678,8 @@ public class userhome extends javax.swing.JFrame {
                 return;
             }
 
-            // Generate report with error handling
             try {
+                // Generate the report
                 JasperPrint print = JasperFillManager.fillReport(reportStream, parameters, dataSource);
 
                 if (print.getPages().size() == 0) {
@@ -638,31 +689,63 @@ public class userhome extends javax.swing.JFrame {
                     return;
                 }
 
-                // Display report
+                // Display the report
                 JasperViewer viewer = new JasperViewer(print, false);
                 viewer.setTitle("Invoice #" + jTextField3.getText());
                 viewer.setVisible(true);
 
+                // Clear form after successful printing
                 clearForm();
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this,
+                        "Error generating report: " + e.getMessage(),
+                        "Report Generation Error", JOptionPane.ERROR_MESSAGE);
             } finally {
                 if (reportStream != null) {
                     try {
                         reportStream.close();
-                    } catch (Exception e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
-                        JOptionPane.showMessageDialog(this,
-                                "Error generating report: " + e.getMessage(),
-                                "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
-
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Invalid number format in calculations: " + e.getMessage(),
+                    "Calculation Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                    "Error generating report: " + e.getMessage(),
+                    "Unexpected error: " + e.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private String findCategoryForProduct(String productId) {
+        String category = "Uncategorized";
+        try (Connection conn = DB.database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(
+                     "SELECT c.categoryname FROM products p " +
+                             "LEFT JOIN category c ON p.category_idcategory = c.idcategory " +
+                             "WHERE p.idproducts = ?")) {
+
+            pstmt.setString(1, productId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    category = rs.getString("categoryname");
+                    if (category == null) {
+                        category = "Uncategorized";
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error retrieving product category: " + e.getMessage(),
+                    "Database Error", JOptionPane.WARNING_MESSAGE);
+        }
+        return category;
     }
 
     private boolean saveInvoice() {
