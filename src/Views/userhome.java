@@ -537,7 +537,7 @@ public class userhome extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jTextField5KeyTyped
 
-    private void jTextField5KeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField5KeyReleased
+    private void jTextField5KeyReleased(java.awt.event.KeyEvent evt) {
         // Calculate balance as user types in Paid field
         try {
             double subtotal = Double.parseDouble(jTextField4.getText());
@@ -545,38 +545,38 @@ public class userhome extends javax.swing.JFrame {
             if (!jTextField5.getText().isEmpty() && !jTextField5.getText().equals(".")) {
                 paidAmount = Double.parseDouble(jTextField5.getText());
             }
-            double serviceCharge = subtotal * 0.10; // 10% service charge
-            double totalDue = subtotal + serviceCharge;
+            // Remove service charge calculation
+            double totalDue = subtotal; // Now total is just subtotal
             double balance = paidAmount - totalDue;
             jTextField6.setText(String.format("%.2f", balance));
         } catch (NumberFormatException e) {
-            jTextField6.setText("0.00"); // Reset balance if input is invalid
+            jTextField6.setText("0.00");
         }
-    }//GEN-LAST:event_jTextField5KeyReleased
+    }                                       
 
     private void jTextField6KeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField6KeyTyped
         // Balance field is read-only, so this method should not contain input validation.
     }//GEN-LAST:event_jTextField6KeyTyped
 
 
-    private void jTextField5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField5ActionPerformed
-        // When Enter is pressed in Paid field, calculate balance and move focus
+    private void jTextField5ActionPerformed(java.awt.event.ActionEvent evt) {
         if (!jTextField5.getText().isEmpty()) {
             try {
                 double subtotal = Double.parseDouble(jTextField4.getText());
                 double paidAmount = Double.parseDouble(jTextField5.getText());
-                double serviceCharge = subtotal * 0.10;
-                double totalDue = subtotal + serviceCharge;
+                // Remove service charge calculation
+                double totalDue = subtotal; // Now total is just subtotal
                 double balance = paidAmount - totalDue;
                 jTextField6.setText(String.format("%.2f", balance));
-                jButton3.grabFocus(); // Focus on Print button
+                jButton3.grabFocus();
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(this, "Invalid amount entered for Paid.", "Input Error", JOptionPane.ERROR_MESSAGE);
-                jTextField5.setText("0.00"); // Reset to 0.00
+                jTextField5.setText("0.00");
                 jTextField6.setText("0.00");
             }
         }
-    }//GEN-LAST:event_jTextField5ActionPerformed
+    }                                           
+
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
         DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
         if (model.getRowCount() == 0) {
@@ -586,20 +586,17 @@ public class userhome extends javax.swing.JFrame {
         }
 
         try {
-            // Register custom fonts for the report
             registerCustomFonts();
 
             // Calculate financial values
             double subtotal = Double.parseDouble(jTextField4.getText());
-            double serviceCharge = subtotal * 0.10;
-            double totalDue = subtotal + serviceCharge;
             double paidAmount = Double.parseDouble(jTextField5.getText());
-            double balance = paidAmount - totalDue;
+            double balance = paidAmount - subtotal;
 
             // Validate payment
-            if (paidAmount < totalDue) {
+            if (paidAmount < subtotal) {
                 JOptionPane.showMessageDialog(this,
-                        "Paid amount is less than the total due (" + String.format("%.2f", totalDue) + ").",
+                        "Paid amount is less than the total (" + String.format("%.2f", subtotal) + ").",
                         "Insufficient Payment", JOptionPane.WARNING_MESSAGE);
                 return;
             }
@@ -611,30 +608,26 @@ public class userhome extends javax.swing.JFrame {
                 return;
             }
 
-            // Prepare report parameters
+            // Prepare report parameters - UPDATED TO MATCH TEMPLATE
             Map<String, Object> parameters = new HashMap<>();
-            parameters.put("Parameter1", String.format("%.2f", subtotal));  // Subtotal
-            parameters.put("Parameter2", String.format("%.2f", serviceCharge));  // Service charge
-            parameters.put("Parameter3", String.format("%.2f", totalDue));  // Total due
-            parameters.put("Parameter4", String.format("%.2f", paidAmount));  // Paid amount
+            parameters.put("Parameter6", jTextField3.getText());  // Bill No
+            parameters.put("Parameter9", txtdate.getText() + " " + txttime.getText());  // Date & Time
+            parameters.put("Parameter1", String.format("%.2f", subtotal));  // Total
+            parameters.put("Parameter4", String.format("%.2f", paidAmount));  // Paid Amount
             parameters.put("Parameter5", String.format("%.2f", balance));  // Balance
-            parameters.put("Parameter6", jTextField3.getText());  // Invoice number
-            parameters.put("Parameter9", txtdate.getText() + " " + txttime.getText());  // Date and time
-            parameters.put(JRParameter.IS_IGNORE_PAGINATION, Boolean.TRUE);  // Pagination control
+            parameters.put(JRParameter.IS_IGNORE_PAGINATION, Boolean.TRUE);
 
-            // Create data model for the report with exact field names
+            // Create data model for the report
             DefaultTableModel reportModel = new DefaultTableModel(
                     new Object[][]{},
-                    new String[]{"Category", "Name", "Portion", "Count", "Price", "Total Price"}
+                    new String[]{"Category", "Name", "Portion", "Count", "Price"}
             ) {
                 @Override
                 public Class<?> getColumnClass(int columnIndex) {
-                    // Properly define column classes for correct formatting in report
                     switch (columnIndex) {
                         case 3: return Integer.class;    // Count
-                        case 4:
-                        case 5: return Double.class;     // Price and Total Price
-                        default: return String.class;    // All other columns
+                        case 4: return Double.class;    // Price
+                        default: return String.class;
                     }
                 }
             };
@@ -646,7 +639,6 @@ public class userhome extends javax.swing.JFrame {
                 String portion = model.getValueAt(i, 2).toString();
                 int count = Integer.parseInt(model.getValueAt(i, 3).toString());
                 double price = Double.parseDouble(model.getValueAt(i, 4).toString());
-                double totalPrice = Double.parseDouble(model.getValueAt(i, 5).toString());
 
                 String category = findCategoryForProduct(productId);
 
@@ -655,15 +647,8 @@ public class userhome extends javax.swing.JFrame {
                         productName,
                         portion,
                         count,
-                        price,
-                        totalPrice
+                        price
                 });
-            }
-
-            // Debug: Print the report model to console
-            System.out.println("Report Data:");
-            for (int i = 0; i < reportModel.getRowCount(); i++) {
-                System.out.println(Arrays.toString(reportModel.getDataVector().elementAt(i).toArray()));
             }
 
             // Create data source
@@ -710,10 +695,6 @@ public class userhome extends javax.swing.JFrame {
                     }
                 }
             }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this,
-                    "Invalid number format in calculations: " + e.getMessage(),
-                    "Calculation Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this,
@@ -751,22 +732,19 @@ public class userhome extends javax.swing.JFrame {
     private boolean saveInvoice() {
         Connection conn = null;
         try {
-            // Validate if user ID is available
             if (currentUserId == null || currentUserId.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "User ID not available. Cannot save invoice.", "Error", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
 
-            // Calculate values
+            // Calculate values - removed service charge
             double subtotal = Double.parseDouble(jTextField4.getText());
-            double serviceCharge = subtotal * 0.10;
-            double totalDue = subtotal + serviceCharge;
+            double totalDue = subtotal; // Now total is just subtotal
             double paidAmount = Double.parseDouble(jTextField5.getText());
             double balance = paidAmount - totalDue;
-            String invoiceNumber = jTextField3.getText(); // This is the invoice_number
+            String invoiceNumber = jTextField3.getText();
             int isDineIn = jRadioButton1.isSelected() ? 1 : 0;
 
-            // Get connection
             conn = DB.database.getConnection();
             if (conn == null) {
                 JOptionPane.showMessageDialog(this, "Database connection failed.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -774,20 +752,19 @@ public class userhome extends javax.swing.JFrame {
             }
             conn.setAutoCommit(false);
 
-            // 1. Save invoice header and get generated ID
-            String invoiceSql = "INSERT INTO invoice (invoice_number, user_id, subtotal, service_charge, total, paid, balance, is_dine_in, created_at) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+            // Update SQL to remove service_charge column
+            String invoiceSql = "INSERT INTO invoice (invoice_number, user_id, subtotal, total, paid, balance, is_dine_in, created_at) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
 
             int invoiceId = -1;
             try (PreparedStatement pstmt = conn.prepareStatement(invoiceSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
                 pstmt.setString(1, invoiceNumber);
                 pstmt.setInt(2, Integer.parseInt(currentUserId));
                 pstmt.setDouble(3, subtotal);
-                pstmt.setDouble(4, serviceCharge);
-                pstmt.setDouble(5, totalDue);
-                pstmt.setDouble(6, paidAmount);
-                pstmt.setDouble(7, balance);
-                pstmt.setInt(8, isDineIn);
+                pstmt.setDouble(4, totalDue);
+                pstmt.setDouble(5, paidAmount);
+                pstmt.setDouble(6, balance);
+                pstmt.setInt(7, isDineIn);
                 pstmt.executeUpdate();
 
                 // Get the auto-generated invoice ID
@@ -857,9 +834,9 @@ public class userhome extends javax.swing.JFrame {
     private InputStream getReportStream() {
         // Try multiple locations for the report template
         String[] pathsToTry = {
-            "/reports/heavenly.jasper",
-            "reports/heavenly.jasper",
-            "src/reports/heavenly.jasper"
+            "/reports/heavenly_new.jasper",
+            "reports/heavenly_new.jasper",
+            "src/reports/heavenly_new.jasper"
         };
 
         for (String path : pathsToTry) {
