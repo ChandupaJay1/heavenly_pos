@@ -228,12 +228,17 @@ public class userhome extends javax.swing.JFrame {
 
         jTable2.setFont(new java.awt.Font("Tahoma", 1, 17)); // NOI18N
         jTable2.setModel(new javax.swing.table.DefaultTableModel(
+<<<<<<< HEAD
             new Object [][] {
 
             },
             new String [] {
                 "ID", "Name", "Portion", "Count", "Price"
             }
+=======
+                new Object[][] {},
+                new String[] {"ID", "Name", "Portion", "Count", "Price", "Total"}
+>>>>>>> d086f62 (error fixed 2)
         ));
         jTable2.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -1005,12 +1010,22 @@ public class userhome extends javax.swing.JFrame {
 
         for (int i = 0; i < model.getRowCount(); i++) {
             try {
+<<<<<<< HEAD
                 Object value = model.getValueAt(i, 5); // Total Price column
                 if (value instanceof Number) {
                     sum += ((Number) value).doubleValue();
                 } else if (value instanceof String) {
                     sum += Double.parseDouble((String) value);
                 }
+=======
+                // Get quantity and unit price
+                int quantity = Integer.parseInt(model.getValueAt(i, 3).toString());
+                double unitPrice = Double.parseDouble(model.getValueAt(i, 4).toString());
+
+                // Calculate total for this row
+                double rowTotal = quantity * unitPrice;
+                sum += rowTotal;
+>>>>>>> d086f62 (error fixed 2)
             } catch (Exception e) {
                 System.err.println("Error calculating subtotal for row " + i);
                 e.printStackTrace();
