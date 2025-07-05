@@ -404,55 +404,75 @@ public class userhome extends javax.swing.JFrame {
     private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {
         int selectedRow = jTable1.getSelectedRow();
         if (selectedRow != -1) {
-            Object idValue = jTable1.getValueAt(selectedRow, 0);
-            Object nameValue = jTable1.getValueAt(selectedRow, 2);
-            Object portionValue = jTable1.getValueAt(selectedRow, 3);
-            Object unitPriceValue = jTable1.getValueAt(selectedRow, 4);
+            try {
+                Object idValue = jTable1.getValueAt(selectedRow, 0);
+                Object nameValue = jTable1.getValueAt(selectedRow, 2);
+                Object portionValue = jTable1.getValueAt(selectedRow, 3);
+                Object unitPriceValue = jTable1.getValueAt(selectedRow, 4);
 
-            if (idValue != null && nameValue != null && portionValue != null && unitPriceValue != null) {
-                String id = idValue.toString();
-                String name = nameValue.toString();
-                String portion = portionValue.toString();
-                double unitPrice = Double.parseDouble(unitPriceValue.toString());
+                if (idValue != null && nameValue != null && portionValue != null && unitPriceValue != null) {
+                    String id = idValue.toString();
+                    String name = nameValue.toString();
+                    String portion = portionValue.toString();
+                    double unitPrice = Double.parseDouble(unitPriceValue.toString());
 
-                String itemCountStr = JOptionPane.showInputDialog(null,
-                        "Enter Item Count for " + name,
-                        "Enter Item Count",
-                        JOptionPane.QUESTION_MESSAGE);
+                    String itemCountStr = JOptionPane.showInputDialog(null,
+                            "Enter Item Count for " + name,
+                            "Enter Item Count",
+                            JOptionPane.QUESTION_MESSAGE);
 
-                if (itemCountStr == null || itemCountStr.trim().isEmpty()) {
-                    return;
-                }
+                    if (itemCountStr != null && !itemCountStr.trim().isEmpty()) {
+                        int itemCount = Integer.parseInt(itemCountStr.trim());
+                        if (itemCount <= 0) {
+                            JOptionPane.showMessageDialog(this,
+                                    "Item count must be positive.",
+                                    "Invalid Input", JOptionPane.WARNING_MESSAGE);
+                            return;
+                        }
 
-                try {
-                    int itemCount = Integer.parseInt(itemCountStr.trim());
-                    if (itemCount <= 0) {
-                        JOptionPane.showMessageDialog(this,
-                                "Item count must be positive.",
-                                "Invalid Input", JOptionPane.WARNING_MESSAGE);
-                        return;
+                        double totalItemPrice = unitPrice * itemCount;
+
+                        DefaultTableModel dtm1 = (DefaultTableModel) jTable2.getModel();
+
+                        // Check if item already exists in the order
+                        boolean itemExists = false;
+                        for (int i = 0; i < dtm1.getRowCount(); i++) {
+                            String existingId = dtm1.getValueAt(i, 0).toString();
+                            String existingPortion = dtm1.getValueAt(i, 2).toString();
+                            if (existingId.equals(id) && existingPortion.equals(portion)) {
+                                // Update existing item
+                                int currentCount = Integer.parseInt(dtm1.getValueAt(i, 3).toString());
+                                dtm1.setValueAt(currentCount + itemCount, i, 3);
+                                dtm1.setValueAt(unitPrice * (currentCount + itemCount), i, 5);
+                                itemExists = true;
+                                break;
+                            }
+                        }
+
+                        if (!itemExists) {
+                            // Add new item
+                            Vector<Object> v = new Vector<>();
+                            v.add(id);
+                            v.add(name);
+                            v.add(portion);
+                            v.add(itemCount);
+                            v.add(unitPrice);
+                            v.add(totalItemPrice);
+                            dtm1.addRow(v);
+                        }
+
+                        CountSubTotal();
+                        jTextField5.grabFocus();
                     }
-
-                    double totalItemPrice = unitPrice * itemCount;
-
-                    DefaultTableModel dtm1 = (DefaultTableModel) jTable2.getModel();
-                    Vector<Object> v = new Vector<>();
-                    v.add(id);                        // String
-                    v.add(name);                      // String
-                    v.add(portion);                   // String
-                    v.add(String.valueOf(itemCount)); // Integer
-                    v.add(unitPrice);                 // Double
-                    v.add(totalItemPrice);            // Double
-                    dtm1.addRow(v);
-
-                    CountSubTotal();
-                    jTextField5.grabFocus();
-
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(this,
-                            "Invalid item count. Please enter a number.",
-                            "Input Error", JOptionPane.ERROR_MESSAGE);
                 }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this,
+                        "Invalid item count. Please enter a number.",
+                        "Input Error", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                        "Error adding item: " + e.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -545,14 +565,15 @@ public class userhome extends javax.swing.JFrame {
             if (!jTextField5.getText().isEmpty() && !jTextField5.getText().equals(".")) {
                 paidAmount = Double.parseDouble(jTextField5.getText());
             }
-            // Remove service charge calculation
+            // REMOVED SERVICE CHARGE CALCULATION
             double totalDue = subtotal; // Now total is just subtotal
             double balance = paidAmount - totalDue;
             jTextField6.setText(String.format("%.2f", balance));
         } catch (NumberFormatException e) {
             jTextField6.setText("0.00");
         }
-    }                                       
+    }
+
 
     private void jTextField6KeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField6KeyTyped
         // Balance field is read-only, so this method should not contain input validation.
@@ -564,7 +585,7 @@ public class userhome extends javax.swing.JFrame {
             try {
                 double subtotal = Double.parseDouble(jTextField4.getText());
                 double paidAmount = Double.parseDouble(jTextField5.getText());
-                // Remove service charge calculation
+                // REMOVED SERVICE CHARGE CALCULATION
                 double totalDue = subtotal; // Now total is just subtotal
                 double balance = paidAmount - totalDue;
                 jTextField6.setText(String.format("%.2f", balance));
@@ -575,7 +596,7 @@ public class userhome extends javax.swing.JFrame {
                 jTextField6.setText("0.00");
             }
         }
-    }                                           
+    }
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
         DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
@@ -593,6 +614,9 @@ public class userhome extends javax.swing.JFrame {
             double paidAmount = Double.parseDouble(jTextField5.getText());
             double balance = paidAmount - subtotal;
 
+            // Update the balance field in the UI BEFORE printing
+            jTextField6.setText(String.format("%.2f", balance));
+
             // Validate payment
             if (paidAmount < subtotal) {
                 JOptionPane.showMessageDialog(this,
@@ -608,19 +632,24 @@ public class userhome extends javax.swing.JFrame {
                 return;
             }
 
-            // Prepare report parameters - UPDATED TO MATCH TEMPLATE
+            // Prepare report parameters
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("Parameter6", jTextField3.getText());  // Bill No
             parameters.put("Parameter9", txtdate.getText() + " " + txttime.getText());  // Date & Time
             parameters.put("Parameter1", String.format("%.2f", subtotal));  // Total
             parameters.put("Parameter4", String.format("%.2f", paidAmount));  // Paid Amount
             parameters.put("Parameter5", String.format("%.2f", balance));  // Balance
+
+            // Try alternative parameter names for balance
+            parameters.put("Balance", String.format("%.2f", balance));
+            parameters.put("BALANCE", String.format("%.2f", balance));
+
             parameters.put(JRParameter.IS_IGNORE_PAGINATION, Boolean.TRUE);
 
-            // Create data model for the report
+            // Create data model with columns that match your template
             DefaultTableModel reportModel = new DefaultTableModel(
                     new Object[][]{},
-                    new String[]{"Category", "Name", "Portion", "Count", "Price"}
+                    new String[]{"Name", "Category", "Portion", "Count", "Price"}
             ) {
                 @Override
                 public Class<?> getColumnClass(int columnIndex) {
@@ -632,29 +661,34 @@ public class userhome extends javax.swing.JFrame {
                 }
             };
 
-            // Populate the report model with data
+            // Add items to report model
             for (int i = 0; i < model.getRowCount(); i++) {
-                String productId = model.getValueAt(i, 0).toString();
-                String productName = model.getValueAt(i, 1).toString();
-                String portion = model.getValueAt(i, 2).toString();
-                int count = Integer.parseInt(model.getValueAt(i, 3).toString());
-                double price = Double.parseDouble(model.getValueAt(i, 4).toString());
+                try {
+                    String productId = model.getValueAt(i, 0).toString();
+                    String productName = model.getValueAt(i, 1).toString();
+                    String portion = model.getValueAt(i, 2).toString();
+                    int count = Integer.parseInt(model.getValueAt(i, 3).toString());
+                    double price = Double.parseDouble(model.getValueAt(i, 4).toString());
 
-                String category = findCategoryForProduct(productId);
+                    String category = findCategoryForProduct(productId);
+                    if (category == null) {
+                        category = "Uncategorized";
+                    }
 
-                reportModel.addRow(new Object[]{
-                        category,
-                        productName,
-                        portion,
-                        count,
-                        price
-                });
+                    reportModel.addRow(new Object[]{
+                            productName,
+                            category,
+                            portion,
+                            count,
+                            price
+                    });
+                } catch (Exception e) {
+                    System.err.println("Error processing row " + i + ": " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
 
-            // Create data source
-            JRDataSource dataSource = new JRTableModelDataSource(reportModel);
-
-            // Load report template
+            // Load and generate report
             InputStream reportStream = getReportStream();
             if (reportStream == null) {
                 JOptionPane.showMessageDialog(this,
@@ -664,8 +698,8 @@ public class userhome extends javax.swing.JFrame {
             }
 
             try {
-                // Generate the report
-                JasperPrint print = JasperFillManager.fillReport(reportStream, parameters, dataSource);
+                JasperPrint print = JasperFillManager.fillReport(reportStream, parameters,
+                        new JRTableModelDataSource(reportModel));
 
                 if (print.getPages().size() == 0) {
                     JOptionPane.showMessageDialog(this,
@@ -681,11 +715,6 @@ public class userhome extends javax.swing.JFrame {
 
                 // Clear form after successful printing
                 clearForm();
-            } catch (Exception e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(this,
-                        "Error generating report: " + e.getMessage(),
-                        "Report Generation Error", JOptionPane.ERROR_MESSAGE);
             } finally {
                 if (reportStream != null) {
                     try {
@@ -698,8 +727,8 @@ public class userhome extends javax.swing.JFrame {
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                    "Unexpected error: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+                    "Error generating report: " + e.getMessage(),
+                    "Report Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -752,7 +781,7 @@ public class userhome extends javax.swing.JFrame {
             }
             conn.setAutoCommit(false);
 
-            // Update SQL to remove service_charge column
+            // Updated SQL to remove service_charge column
             String invoiceSql = "INSERT INTO invoice (invoice_number, user_id, subtotal, total, paid, balance, is_dine_in, created_at) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
 
@@ -777,7 +806,7 @@ public class userhome extends javax.swing.JFrame {
                 }
             }
 
-            // 2. Save invoice items using the actual invoice ID (not invoice_number)
+            // Save invoice items
             DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
             String itemSql = "INSERT INTO invoice_item (invoice_id, product_id, product_name, portion, quantity, unit_price, total_price) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -791,7 +820,7 @@ public class userhome extends javax.swing.JFrame {
                     double unitPrice = Double.parseDouble(model.getValueAt(i, 4).toString());
                     double totalItemPrice = Double.parseDouble(model.getValueAt(i, 5).toString());
 
-                    pstmt.setInt(1, invoiceId); // Use the actual invoice ID here
+                    pstmt.setInt(1, invoiceId);
                     pstmt.setString(2, itemId);
                     pstmt.setString(3, itemName);
                     pstmt.setString(4, portion);
@@ -834,9 +863,9 @@ public class userhome extends javax.swing.JFrame {
     private InputStream getReportStream() {
         // Try multiple locations for the report template
         String[] pathsToTry = {
-            "/reports/heavenly_new.jasper",
-            "reports/heavenly_new.jasper",
-            "src/reports/heavenly_new.jasper"
+            "/reports/heavenly_new_1.jasper",
+            "reports/heavenly_new_1.jasper",
+            "src/reports/heavenly_new_1.jasper"
         };
 
         for (String path : pathsToTry) {
@@ -976,9 +1005,16 @@ public class userhome extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
 
         for (int i = 0; i < model.getRowCount(); i++) {
-            Object value = model.getValueAt(i, 5); // Total Price column
-            if (value instanceof Number) {
-                sum += ((Number) value).doubleValue();
+            try {
+                Object value = model.getValueAt(i, 5); // Total Price column
+                if (value instanceof Number) {
+                    sum += ((Number) value).doubleValue();
+                } else if (value instanceof String) {
+                    sum += Double.parseDouble((String) value);
+                }
+            } catch (Exception e) {
+                System.err.println("Error calculating subtotal for row " + i);
+                e.printStackTrace();
             }
         }
 
