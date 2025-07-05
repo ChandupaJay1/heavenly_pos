@@ -228,19 +228,18 @@ public class userhome extends javax.swing.JFrame {
 
         jTable2.setFont(new java.awt.Font("Tahoma", 1, 17)); // NOI18N
         jTable2.setModel(new javax.swing.table.DefaultTableModel(
-                new Object [][] {},
-                new String [] {
-                        "ID", "Name", "Portion", "Count", "Price", "Total Price"  // Changed "Unit Price" to "Price"
-                }
-) {
-    boolean[] canEdit = new boolean [] {
-        false, false, false, false, false, false
-    };
+            new Object [][] {
 
-    public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return canEdit [columnIndex];
-    }
-});
+            },
+            new String [] {
+                "ID", "Name", "Portion", "Count", "Price"
+            }
+        ));
+        jTable2.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTable2MouseClicked(evt);
+            }
+        });
         jScrollPane2.setViewportView(jTable2);
 
         getContentPane().add(jScrollPane2, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 410, 1150, 200));
@@ -312,7 +311,7 @@ public class userhome extends javax.swing.JFrame {
                 jButton3ActionPerformed(evt);
             }
         });
-        getContentPane().add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(1090, 730, 110, 40));
+        getContentPane().add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(1080, 660, 110, 40));
 
         jLabel10.setFont(new java.awt.Font("Tahoma", 1, 27)); // NOI18N
         jLabel10.setText("Ordered Items");
