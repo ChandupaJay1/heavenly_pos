@@ -228,8 +228,8 @@ public class userhome extends javax.swing.JFrame {
 
         jTable2.setFont(new java.awt.Font("Tahoma", 1, 17)); // NOI18N
         jTable2.setModel(new javax.swing.table.DefaultTableModel(
-                new Object [][] {},
-                new String [] {"ID", "Name", "Portion", "Count", "Price", "Total"}
+                new Object[][] {},
+                new String[] {"ID", "Name", "Portion", "Count", "Price", "Total"}
         ));
         jTable2.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
