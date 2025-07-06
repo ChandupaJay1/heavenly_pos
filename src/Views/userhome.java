@@ -61,7 +61,7 @@ public class userhome extends javax.swing.JFrame {
         buttongroup();
         startDateTimeUpdater();
         jTextField4.setText("0.00");
-        jTextField5.setText("0.00");
+//        jTextField5.setText("0.00");
         jTextField6.setText("0.00");
     }
 
@@ -574,7 +574,6 @@ public class userhome extends javax.swing.JFrame {
         // Balance field is read-only, so this method should not contain input validation.
     }//GEN-LAST:event_jTextField6KeyTyped
 
-
     private void jTextField5ActionPerformed(java.awt.event.ActionEvent evt) {
         if (!jTextField5.getText().isEmpty()) {
             try {
@@ -649,9 +648,12 @@ public class userhome extends javax.swing.JFrame {
                 @Override
                 public Class<?> getColumnClass(int columnIndex) {
                     switch (columnIndex) {
-                        case 3: return Integer.class;    // Count
-                        case 4: return Double.class;    // Price
-                        default: return String.class;
+                        case 3:
+                            return Integer.class;    // Count
+                        case 4:
+                            return Double.class;    // Price
+                        default:
+                            return String.class;
                     }
                 }
             };
@@ -671,11 +673,11 @@ public class userhome extends javax.swing.JFrame {
                     }
 
                     reportModel.addRow(new Object[]{
-                            productName,
-                            category,
-                            portion,
-                            count,
-                            price
+                        productName,
+                        category,
+                        portion,
+                        count,
+                        price
                     });
                 } catch (Exception e) {
                     System.err.println("Error processing row " + i + ": " + e.getMessage());
@@ -729,11 +731,10 @@ public class userhome extends javax.swing.JFrame {
 
     private String findCategoryForProduct(String productId) {
         String category = "Uncategorized";
-        try (Connection conn = DB.database.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(
-                     "SELECT c.categoryname FROM products p " +
-                             "LEFT JOIN category c ON p.category_idcategory = c.idcategory " +
-                             "WHERE p.idproducts = ?")) {
+        try (Connection conn = DB.database.getConnection(); PreparedStatement pstmt = conn.prepareStatement(
+                "SELECT c.categoryname FROM products p "
+                + "LEFT JOIN category c ON p.category_idcategory = c.idcategory "
+                + "WHERE p.idproducts = ?")) {
 
             pstmt.setString(1, productId);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -891,8 +892,10 @@ public class userhome extends javax.swing.JFrame {
         );
 
         if (option == JOptionPane.YES_OPTION) {
-            this.dispose(); // Close current window
-            new login().setVisible(true); // Open login window
+            this.dispose();
+            java.awt.EventQueue.invokeLater(() -> {
+                new login().setVisible(true);
+            });
         }
     }
 
