@@ -228,8 +228,12 @@ public class userhome extends javax.swing.JFrame {
 
         jTable2.setFont(new java.awt.Font("Tahoma", 1, 17)); // NOI18N
         jTable2.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][] {},
-                new String[] {"ID", "Name", "Portion", "Count", "Price", "Total"}
+            new Object [][] {
+
+            },
+            new String [] {
+                "ID", "Name", "Portion", "Count", "Price"
+            }
         ));
         jTable2.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -247,7 +251,7 @@ public class userhome extends javax.swing.JFrame {
                 jButton2ActionPerformed(evt);
             }
         });
-        getContentPane().add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(1070, 610, 120, -1));
+        getContentPane().add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(1070, 620, 120, -1));
 
         jRadioButton1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jRadioButton1.setText("Dine in");
@@ -307,7 +311,7 @@ public class userhome extends javax.swing.JFrame {
                 jButton3ActionPerformed(evt);
             }
         });
-        getContentPane().add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(1080, 660, 110, 40));
+        getContentPane().add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(1080, 730, 110, 40));
 
         jLabel10.setFont(new java.awt.Font("Tahoma", 1, 27)); // NOI18N
         jLabel10.setText("Ordered Items");

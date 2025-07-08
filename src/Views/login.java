@@ -145,7 +145,7 @@ public class login extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jPasswordField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jPasswordField1ActionPerformed
-        if (!(jPasswordField1.getText().isEmpty())) {
+        if (!(new String(jPasswordField1.getPassword()).isEmpty())) {
             jButton2.grabFocus();
         } else {
             JOptionPane.showMessageDialog(this, "Please enter Password");
@@ -210,14 +210,14 @@ private void closeconfirm() {
     }
 }
 
-    private void loginmethod() {
+private void loginmethod() {
         if (jTextField1.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please Enter User Name");
-        } else if (jPasswordField1.getText().isEmpty()) {
+        } else if (new String(jPasswordField1.getPassword()).isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please enter Password");
         } else {
             try {
-                ResultSet search = DB.database.search("select * from user where username='" + jTextField1.getText() + "' and password='" + jPasswordField1.getText() + "' and status='active'");
+                ResultSet search = DB.database.search("select * from user where username='" + jTextField1.getText() + "' and password='" + new String(jPasswordField1.getPassword()) + "' and status='active'");
                 if (search.next()) {
                     String type = search.getString("usertype");
 
