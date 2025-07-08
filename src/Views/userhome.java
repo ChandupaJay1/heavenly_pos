@@ -116,9 +116,13 @@ public class userhome extends javax.swing.JFrame {
         jTextField6 = new javax.swing.JTextField();
         jButton3 = new javax.swing.JButton();
         jLabel10 = new javax.swing.JLabel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jTable3 = new javax.swing.JTable();
+        jButton4 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setUndecorated(true);
+        setResizable(false);
         addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 formMouseClicked(evt);
@@ -135,7 +139,7 @@ public class userhome extends javax.swing.JFrame {
                 jButton1ActionPerformed(evt);
             }
         });
-        getContentPane().add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(1190, 0, -1, -1));
+        getContentPane().add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(1450, 10, -1, -1));
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 48)); // NOI18N
         jLabel1.setText("INVOICE");
@@ -143,7 +147,7 @@ public class userhome extends javax.swing.JFrame {
 
         jLabel2.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel2.setText("Item Name ");
-        getContentPane().add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 90, -1, -1));
+        getContentPane().add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(390, 80, -1, -1));
 
         txttime.setFont(new java.awt.Font("Tahoma", 1, 36)); // NOI18N
         txttime.setForeground(new java.awt.Color(0, 0, 0));
@@ -164,11 +168,11 @@ public class userhome extends javax.swing.JFrame {
                 jTextField1KeyTyped(evt);
             }
         });
-        getContentPane().add(jTextField1, new org.netbeans.lib.awtextra.AbsoluteConstraints(560, 90, 180, -1));
+        getContentPane().add(jTextField1, new org.netbeans.lib.awtextra.AbsoluteConstraints(500, 80, 180, -1));
 
         jLabel3.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel3.setText("Inoice ID");
-        getContentPane().add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 90, -1, -1));
+        getContentPane().add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 80, -1, -1));
 
         jTextField2.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jTextField2.addActionListener(new java.awt.event.ActionListener() {
@@ -181,7 +185,7 @@ public class userhome extends javax.swing.JFrame {
                 jTextField2KeyTyped(evt);
             }
         });
-        getContentPane().add(jTextField2, new org.netbeans.lib.awtextra.AbsoluteConstraints(880, 90, 180, -1));
+        getContentPane().add(jTextField2, new org.netbeans.lib.awtextra.AbsoluteConstraints(810, 80, 180, -1));
 
         jLabel4.setFont(new java.awt.Font("Tahoma", 1, 27)); // NOI18N
         jLabel4.setText("KOT");
@@ -198,7 +202,7 @@ public class userhome extends javax.swing.JFrame {
                 jTextField3KeyTyped(evt);
             }
         });
-        getContentPane().add(jTextField3, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 90, 180, -1));
+        getContentPane().add(jTextField3, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 80, 180, -1));
 
         jTable1.setFont(new java.awt.Font("Tahoma", 1, 16)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
@@ -216,11 +220,11 @@ public class userhome extends javax.swing.JFrame {
         });
         jScrollPane1.setViewportView(jTable1);
 
-        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 160, 1150, 200));
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 160, 960, 200));
 
         jLabel5.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel5.setText("Item Code ");
-        getContentPane().add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(770, 90, -1, -1));
+        getContentPane().add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(700, 80, -1, -1));
 
         jLabel6.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel6.setText("Items");
@@ -242,7 +246,7 @@ public class userhome extends javax.swing.JFrame {
         });
         jScrollPane2.setViewportView(jTable2);
 
-        getContentPane().add(jScrollPane2, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 410, 1150, 200));
+        getContentPane().add(jScrollPane2, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 410, 960, 200));
 
         jButton2.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         jButton2.setText("Remove Item");
@@ -251,29 +255,29 @@ public class userhome extends javax.swing.JFrame {
                 jButton2ActionPerformed(evt);
             }
         });
-        getContentPane().add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(1070, 620, 120, -1));
+        getContentPane().add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(860, 630, 120, -1));
 
         jRadioButton1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jRadioButton1.setText("Dine in");
-        getContentPane().add(jRadioButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(1020, 380, -1, -1));
+        getContentPane().add(jRadioButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(910, 380, -1, -1));
 
         jRadioButton2.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jRadioButton2.setSelected(true);
         jRadioButton2.setText("Take away");
-        getContentPane().add(jRadioButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(880, 380, -1, -1));
+        getContentPane().add(jRadioButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(770, 380, -1, -1));
 
         jLabel7.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel7.setText("Balance :");
-        getContentPane().add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(720, 740, -1, -1));
+        getContentPane().add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(700, 720, -1, -1));
 
         jTextField4.setEditable(false);
         jTextField4.setFont(new java.awt.Font("Tahoma", 1, 30)); // NOI18N
         jTextField4.setForeground(new java.awt.Color(0, 0, 204));
-        getContentPane().add(jTextField4, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 730, 210, -1));
+        getContentPane().add(jTextField4, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 710, 210, -1));
 
         jLabel8.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel8.setText("Sub Total :");
-        getContentPane().add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 740, -1, -1));
+        getContentPane().add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 720, -1, -1));
 
         jTextField5.setFont(new java.awt.Font("Tahoma", 1, 30)); // NOI18N
         jTextField5.setForeground(new java.awt.Color(0, 0, 204));
@@ -287,11 +291,11 @@ public class userhome extends javax.swing.JFrame {
                 jTextField5KeyTyped(evt);
             }
         });
-        getContentPane().add(jTextField5, new org.netbeans.lib.awtextra.AbsoluteConstraints(490, 730, 210, -1));
+        getContentPane().add(jTextField5, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 710, 210, -1));
 
         jLabel9.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabel9.setText("Paid  :");
-        getContentPane().add(jLabel9, new org.netbeans.lib.awtextra.AbsoluteConstraints(410, 740, -1, -1));
+        getContentPane().add(jLabel9, new org.netbeans.lib.awtextra.AbsoluteConstraints(390, 720, -1, -1));
 
         jTextField6.setEditable(false);
         jTextField6.setFont(new java.awt.Font("Tahoma", 1, 30)); // NOI18N
@@ -301,7 +305,7 @@ public class userhome extends javax.swing.JFrame {
                 jTextField6KeyTyped(evt);
             }
         });
-        getContentPane().add(jTextField6, new org.netbeans.lib.awtextra.AbsoluteConstraints(840, 730, 210, -1));
+        getContentPane().add(jTextField6, new org.netbeans.lib.awtextra.AbsoluteConstraints(820, 710, 210, -1));
 
         jButton3.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jButton3.setForeground(new java.awt.Color(0, 153, 51));
@@ -311,13 +315,43 @@ public class userhome extends javax.swing.JFrame {
                 jButton3ActionPerformed(evt);
             }
         });
-        getContentPane().add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(1080, 730, 110, 40));
+        getContentPane().add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(1050, 710, 110, 50));
 
         jLabel10.setFont(new java.awt.Font("Tahoma", 1, 27)); // NOI18N
         jLabel10.setText("Ordered Items");
-        getContentPane().add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 380, -1, -1));
+        getContentPane().add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 380, 250, -1));
+
+        jTable3.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "ID", "Invoice ID", "Status", "Name & Portion"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane3.setViewportView(jTable3);
+        if (jTable3.getColumnModel().getColumnCount() > 0) {
+            jTable3.getColumnModel().getColumn(0).setResizable(false);
+            jTable3.getColumnModel().getColumn(1).setResizable(false);
+            jTable3.getColumnModel().getColumn(2).setResizable(false);
+            jTable3.getColumnModel().getColumn(3).setResizable(false);
+        }
+
+        getContentPane().add(jScrollPane3, new org.netbeans.lib.awtextra.AbsoluteConstraints(1020, 160, -1, 450));
+
+        jButton4.setText("Print KOT Bill");
+        getContentPane().add(jButton4, new org.netbeans.lib.awtextra.AbsoluteConstraints(1290, 620, 180, 50));
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
@@ -429,8 +463,6 @@ public class userhome extends javax.swing.JFrame {
                             return;
                         }
 
-                        double totalItemPrice = unitPrice * itemCount;
-
                         DefaultTableModel dtm1 = (DefaultTableModel) jTable2.getModel();
 
                         // Check if item already exists in the order
@@ -441,8 +473,11 @@ public class userhome extends javax.swing.JFrame {
                             if (existingId.equals(id) && existingPortion.equals(portion)) {
                                 // Update existing item
                                 int currentCount = Integer.parseInt(dtm1.getValueAt(i, 3).toString());
-                                dtm1.setValueAt(currentCount + itemCount, i, 3);
-                                dtm1.setValueAt(unitPrice * (currentCount + itemCount), i, 5);
+                                int newCount = currentCount + itemCount;
+                                double totalPrice = unitPrice * newCount;
+
+                                dtm1.setValueAt(newCount, i, 3); // Update quantity
+                                dtm1.setValueAt(totalPrice, i, 4); // Update total price
                                 itemExists = true;
                                 break;
                             }
@@ -455,8 +490,7 @@ public class userhome extends javax.swing.JFrame {
                             v.add(name);
                             v.add(portion);
                             v.add(itemCount);
-                            v.add(unitPrice);
-                            v.add(totalItemPrice);
+                            v.add(unitPrice * itemCount); // Total price for this line
                             dtm1.addRow(v);
                         }
 
@@ -1008,12 +1042,8 @@ public class userhome extends javax.swing.JFrame {
 
         for (int i = 0; i < model.getRowCount(); i++) {
             try {
-                // Get quantity and unit price
-                int quantity = Integer.parseInt(model.getValueAt(i, 3).toString());
-                double unitPrice = Double.parseDouble(model.getValueAt(i, 4).toString());
-
-                // Calculate total for this row
-                double rowTotal = quantity * unitPrice;
+                // Get the total price directly from the table (column 4)
+                double rowTotal = Double.parseDouble(model.getValueAt(i, 4).toString());
                 sum += rowTotal;
             } catch (Exception e) {
                 System.err.println("Error calculating subtotal for row " + i);
@@ -1022,7 +1052,7 @@ public class userhome extends javax.swing.JFrame {
         }
 
         jTextField4.setText(String.format("%.2f", sum));
-        jTextField5.setText("0.00");
+//        jTextField5.setText("0.00");
         jTextField6.setText("0.00");
     }
 
@@ -1115,6 +1145,7 @@ public class userhome extends javax.swing.JFrame {
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton4;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel2;
@@ -1129,8 +1160,10 @@ public class userhome extends javax.swing.JFrame {
     private javax.swing.JRadioButton jRadioButton2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTable2;
+    private javax.swing.JTable jTable3;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField3;
