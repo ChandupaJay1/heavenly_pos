@@ -61,8 +61,8 @@ public class userhome extends javax.swing.JFrame {
         buttongroup();
         startDateTimeUpdater();
         jTextField4.setText("0.00");
-//        jTextField5.setText("0.00");
         jTextField6.setText("0.00");
+        loadTodaysKOTBills(); // Add this line
     }
 
     // Method to update date and time labels
@@ -119,6 +119,7 @@ public class userhome extends javax.swing.JFrame {
         jScrollPane3 = new javax.swing.JScrollPane();
         jTable3 = new javax.swing.JTable();
         jButton4 = new javax.swing.JButton();
+        jButton5 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setUndecorated(true);
@@ -189,7 +190,7 @@ public class userhome extends javax.swing.JFrame {
 
         jLabel4.setFont(new java.awt.Font("Tahoma", 1, 27)); // NOI18N
         jLabel4.setText("KOT");
-        getContentPane().add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 620, -1, -1));
+        getContentPane().add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(1030, 120, -1, -1));
 
         jTextField3.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jTextField3.addActionListener(new java.awt.event.ActionListener() {
@@ -337,6 +338,11 @@ public class userhome extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
+        jTable3.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTable3MouseClicked(evt);
+            }
+        });
         jScrollPane3.setViewportView(jTable3);
         if (jTable3.getColumnModel().getColumnCount() > 0) {
             jTable3.getColumnModel().getColumn(0).setResizable(false);
@@ -348,7 +354,20 @@ public class userhome extends javax.swing.JFrame {
         getContentPane().add(jScrollPane3, new org.netbeans.lib.awtextra.AbsoluteConstraints(1020, 160, -1, 450));
 
         jButton4.setText("Print KOT Bill");
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
         getContentPane().add(jButton4, new org.netbeans.lib.awtextra.AbsoluteConstraints(1290, 620, 180, 50));
+
+        jButton5.setText("Remove from KOT");
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
+        getContentPane().add(jButton5, new org.netbeans.lib.awtextra.AbsoluteConstraints(1110, 630, 150, -1));
 
         pack();
         setLocationRelativeTo(null);
@@ -494,6 +513,7 @@ public class userhome extends javax.swing.JFrame {
                             dtm1.addRow(v);
                         }
 
+                        updateKOTTable();
                         CountSubTotal();
                         jTextField5.grabFocus();
                     }
@@ -573,6 +593,7 @@ public class userhome extends javax.swing.JFrame {
             model.removeRow(selectedRow);
             JOptionPane.showMessageDialog(this, "Item Removed.");
             CountSubTotal(); // Recalculate subtotal after removal
+            updateKOTTable();
         } else {
             JOptionPane.showMessageDialog(this, "Please select a row to remove.", "No Row Selected", JOptionPane.WARNING_MESSAGE);
         }
@@ -611,6 +632,87 @@ public class userhome extends javax.swing.JFrame {
     private void jTextField6KeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField6KeyTyped
         // Balance field is read-only, so this method should not contain input validation.
     }//GEN-LAST:event_jTextField6KeyTyped
+
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+        // TODO add your handling code here:
+        printKOTBill();
+    }//GEN-LAST:event_jButton4ActionPerformed
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {
+        int selectedRow = jTable3.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select a KOT item to remove",
+                    "No Selection",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Get the KOT item details
+        String kotId = jTable3.getValueAt(selectedRow, 0).toString();
+        String invoiceId = jTable3.getValueAt(selectedRow, 1).toString();
+        String status = jTable3.getValueAt(selectedRow, 2).toString();
+
+        // Prevent removing completed KOT items
+        if ("Done".equals(status)) {
+            JOptionPane.showMessageDialog(this,
+                    "Cannot remove completed KOT items",
+                    "Operation Not Allowed",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Confirm removal
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to remove this KOT item?",
+                "Confirm Removal",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                // Remove from database
+                if (removeKOTItem(kotId, invoiceId)) {
+                    // Remove from table
+                    DefaultTableModel model = (DefaultTableModel) jTable3.getModel();
+                    model.removeRow(selectedRow);
+
+                    JOptionPane.showMessageDialog(this,
+                            "KOT item removed successfully",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
+
+                    // Refresh the KOT table
+                    loadKOTItemsFromDB();
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                        "Error removing KOT item: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    } //GEN-LAST:event_jButton5ActionPerformed
+
+    private void jTable3MouseClicked(java.awt.event.MouseEvent evt) {
+        int selectedRow = jTable3.getSelectedRow();
+        if (selectedRow != -1) {
+            // Ask for confirmation before printing
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Print this KOT item?",
+                    "Confirm Print",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                printSelectedKOTItem(selectedRow);
+            }
+        }
+    }                                     
 
     private void jTextField5ActionPerformed(java.awt.event.ActionEvent evt) {
         if (!jTextField5.getText().isEmpty()) {
@@ -657,10 +759,16 @@ public class userhome extends javax.swing.JFrame {
                 return;
             }
 
-            // Save invoice to database
-            if (!saveInvoice()) {
+            // Save invoice and get the generated ID - ONLY ONCE
+            int invoiceId = saveInvoice();
+            if (invoiceId == -1) {
                 JOptionPane.showMessageDialog(this, "Failed to save invoice data.",
                         "Save Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Now save KOT items with the correct invoice ID
+            if (!saveKOTItemsToDB(invoiceId)) {
                 return;
             }
 
@@ -671,11 +779,8 @@ public class userhome extends javax.swing.JFrame {
             parameters.put("Parameter1", String.format("%.2f", subtotal));  // Total
             parameters.put("Parameter4", String.format("%.2f", paidAmount));  // Paid Amount
             parameters.put("Parameter5", String.format("%.2f", balance));  // Balance
-
-            // Try alternative parameter names for balance
             parameters.put("Balance", String.format("%.2f", balance));
             parameters.put("BALANCE", String.format("%.2f", balance));
-
             parameters.put(JRParameter.IS_IGNORE_PAGINATION, Boolean.TRUE);
 
             // Create data model with columns that match your template
@@ -711,11 +816,11 @@ public class userhome extends javax.swing.JFrame {
                     }
 
                     reportModel.addRow(new Object[]{
-                        productName,
-                        category,
-                        portion,
-                        count,
-                        price
+                            productName,
+                            category,
+                            portion,
+                            count,
+                            price
                     });
                 } catch (Exception e) {
                     System.err.println("Error processing row " + i + ": " + e.getMessage());
@@ -769,10 +874,12 @@ public class userhome extends javax.swing.JFrame {
 
     private String findCategoryForProduct(String productId) {
         String category = "Uncategorized";
-        try (Connection conn = DB.database.getConnection(); PreparedStatement pstmt = conn.prepareStatement(
-                "SELECT c.categoryname FROM products p "
-                + "LEFT JOIN category c ON p.category_idcategory = c.idcategory "
-                + "WHERE p.idproducts = ?")) {
+        try (Connection conn = DB.database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(
+                     "SELECT c.categoryname " +
+                             "FROM products p " +
+                             "LEFT JOIN category c ON p.category_idcategory = c.idcategory " +
+                             "WHERE p.idproducts = ?")) {
 
             pstmt.setString(1, productId);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -792,30 +899,110 @@ public class userhome extends javax.swing.JFrame {
         return category;
     }
 
-    private boolean saveInvoice() {
+    private void printSelectedKOTItem(int rowIndex) {
+        try {
+            registerCustomFonts();
+
+            // Get data from the selected row
+            String id = jTable3.getValueAt(rowIndex, 0).toString();
+            String invoiceId = jTable3.getValueAt(rowIndex, 1).toString();
+            String status = jTable3.getValueAt(rowIndex, 2).toString();
+            String namePortion = jTable3.getValueAt(rowIndex, 3).toString();
+
+            // Prepare report parameters
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("Parameter6", invoiceId);  // Bill No
+            parameters.put("Parameter9", txtdate.getText() + " " + txttime.getText());  // Date & Time
+
+            // Create data model with just the selected row
+            DefaultTableModel reportModel = new DefaultTableModel(
+                    new Object[][]{},
+                    new String[]{"ID", "Invoice ID", "Status", "Name & Portion"}
+            );
+
+            reportModel.addRow(new Object[]{
+                    id,
+                    invoiceId,
+                    status,
+                    namePortion
+            });
+
+            // Load and generate report
+            InputStream reportStream = getClass().getResourceAsStream("/reports/heavenly_new_kot.jasper");
+            if (reportStream == null) {
+                JOptionPane.showMessageDialog(this,
+                        "KOT report template not found",
+                        "Report Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            JasperPrint print = JasperFillManager.fillReport(
+                    reportStream,
+                    parameters,
+                    new JRTableModelDataSource(reportModel)
+            );
+
+            if (print.getPages().size() == 0) {
+                JOptionPane.showMessageDialog(this,
+                        "KOT generated but has no pages",
+                        "Report Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            JasperViewer viewer = new JasperViewer(print, false);
+            viewer.setTitle("KOT #" + invoiceId + " - Item " + id);
+            viewer.setVisible(true);
+
+            // Update status to "Done" in database and table after successful printing
+            updateKOTStatusToDone(id, invoiceId);
+
+            // Update the table view
+            DefaultTableModel model = (DefaultTableModel) jTable3.getModel();
+            model.setValueAt("Done", rowIndex, 2);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error printing KOT item: " + e.getMessage(),
+                    "Report Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private int saveInvoice() {
         Connection conn = null;
         try {
             if (currentUserId == null || currentUserId.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "User ID not available. Cannot save invoice.", "Error", JOptionPane.ERROR_MESSAGE);
-                return false;
+                return -1;
             }
 
-            // Calculate values - removed service charge
+            // First check if invoice number already exists
+            String invoiceNumber = jTextField3.getText();
+            String checkSql = "SELECT id FROM invoice WHERE invoice_number = ?";
+            try (Connection checkConn = DB.database.getConnection();
+                 PreparedStatement checkStmt = checkConn.prepareStatement(checkSql)) {
+                checkStmt.setString(1, invoiceNumber);
+                ResultSet rs = checkStmt.executeQuery();
+                if (rs.next()) {
+                    // Invoice already exists, return its ID
+                    return rs.getInt("id");
+                }
+            }
+
+            // Calculate values
             double subtotal = Double.parseDouble(jTextField4.getText());
-            double totalDue = subtotal; // Now total is just subtotal
+            double totalDue = subtotal;
             double paidAmount = Double.parseDouble(jTextField5.getText());
             double balance = paidAmount - totalDue;
-            String invoiceNumber = jTextField3.getText();
             int isDineIn = jRadioButton1.isSelected() ? 1 : 0;
 
             conn = DB.database.getConnection();
             if (conn == null) {
                 JOptionPane.showMessageDialog(this, "Database connection failed.", "Error", JOptionPane.ERROR_MESSAGE);
-                return false;
+                return -1;
             }
             conn.setAutoCommit(false);
 
-            // Updated SQL to remove service_charge column
             String invoiceSql = "INSERT INTO invoice (invoice_number, user_id, subtotal, total, paid, balance, is_dine_in, created_at) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
 
@@ -830,7 +1017,6 @@ public class userhome extends javax.swing.JFrame {
                 pstmt.setInt(7, isDineIn);
                 pstmt.executeUpdate();
 
-                // Get the auto-generated invoice ID
                 try (ResultSet rs = pstmt.getGeneratedKeys()) {
                     if (rs.next()) {
                         invoiceId = rs.getInt(1);
@@ -851,8 +1037,8 @@ public class userhome extends javax.swing.JFrame {
                     String itemName = model.getValueAt(i, 1).toString();
                     String portion = model.getValueAt(i, 2).toString();
                     int quantity = Integer.parseInt(model.getValueAt(i, 3).toString());
-                    double unitPrice = Double.parseDouble(model.getValueAt(i, 4).toString());
-                    double totalItemPrice = Double.parseDouble(model.getValueAt(i, 5).toString());
+                    double unitPrice = Double.parseDouble(model.getValueAt(i, 4).toString()) / quantity;
+                    double totalItemPrice = Double.parseDouble(model.getValueAt(i, 4).toString());
 
                     pstmt.setInt(1, invoiceId);
                     pstmt.setString(2, itemId);
@@ -867,7 +1053,7 @@ public class userhome extends javax.swing.JFrame {
             }
 
             conn.commit();
-            return true;
+            return invoiceId;
 
         } catch (Exception e) {
             if (conn != null) {
@@ -881,7 +1067,7 @@ public class userhome extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this,
                     "Error saving invoice to database: " + e.getMessage(),
                     "Database Save Error", JOptionPane.ERROR_MESSAGE);
-            return false;
+            return -1;
         } finally {
             if (conn != null) {
                 try {
@@ -939,25 +1125,77 @@ public class userhome extends javax.swing.JFrame {
 
     private void invoiceid() {
         try {
-            // Get the maximum invoice ID and increment it
-            // Corrected 'idinvoice' to 'id' based on your ERD
-            ResultSet r = DB.database.search("SELECT MAX(id) AS max_id FROM invoice");
+            // Get the maximum invoice NUMBER (not ID) and increment it
+            ResultSet r = DB.database.search("SELECT MAX(CAST(invoice_number AS UNSIGNED)) AS max_invoice FROM invoice");
 
-            int nextInvoiceId = 1; // Default starting ID
+            int nextInvoiceNum = 1; // Default starting number
             if (r.next()) {
-                int maxId = r.getInt("max_id");
-                if (!r.wasNull()) { // Check if max_id was actually a number (not null)
-                    nextInvoiceId = maxId + 1;
+                String maxInvoice = r.getString("max_invoice");
+                if (maxInvoice != null) {
+                    try {
+                        nextInvoiceNum = Integer.parseInt(maxInvoice) + 1;
+                    } catch (NumberFormatException e) {
+                        // Handle case where invoice_number isn't a number
+                        nextInvoiceNum = 1;
+                    }
                 }
             }
-            jTextField3.setText(String.valueOf(nextInvoiceId)); // Set the invoice ID
+            jTextField3.setText(String.valueOf(nextInvoiceNum));
             jTextField2.setText(null);
             jTextField1.setText(null);
             jTextField1.grabFocus();
-
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error generating invoice ID: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Error generating invoice number: " + e.getMessage(),
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private int createNewInvoice(String invoiceNumber) {
+        Connection conn = null;
+        try {
+            conn = DB.database.getConnection();
+            conn.setAutoCommit(false);
+
+            String sql = "INSERT INTO invoice (invoice_number, user_id, subtotal, total, paid, balance, is_dine_in, created_at) " +
+                    "VALUES (?, ?, 0, 0, 0, 0, ?, NOW())";
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                pstmt.setString(1, invoiceNumber);
+                pstmt.setInt(2, Integer.parseInt(currentUserId));
+                pstmt.setInt(3, jRadioButton1.isSelected() ? 1 : 0);
+                pstmt.executeUpdate();
+
+                try (ResultSet rs = pstmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        conn.commit();
+                        return rs.getInt(1);
+                    }
+                }
+            }
+            conn.rollback();
+            return -1;
+        } catch (Exception e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
+            e.printStackTrace();
+            return -1;
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); }
+                catch (SQLException e) { e.printStackTrace(); }
+            }
+        }
+    }
+
+    private boolean isValidInvoiceNumber(String invoiceNumber) {
+        try {
+            Integer.parseInt(invoiceNumber);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 
@@ -1078,30 +1316,513 @@ public class userhome extends javax.swing.JFrame {
         jRadioButton2.setSelected(true); // Take away
     }
 
+
     private void registerCustomFonts() {
         try {
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-
-            // Load Poppins font from resources
             InputStream fontStream = getClass().getResourceAsStream("/fonts/Poppins-Regular.ttf");
             if (fontStream != null) {
                 Font poppinsFont = Font.createFont(Font.TRUETYPE_FONT, fontStream);
                 ge.registerFont(poppinsFont);
-                System.out.println("Poppins font registered successfully");
-
-                // Set the font as a system property for JasperReports
-                System.setProperty("jasper.reports.compile.temporary", "true");
-                System.setProperty("net.sf.jasperreports.awt.ignore.missing.font", "true");
-            } else {
-                System.out.println("Poppins font file not found in resources");
-                // Fall back to a standard font
-                JOptionPane.showMessageDialog(this,
-                        "Poppins font not found. Using default font for reports.",
-                        "Font Warning", JOptionPane.WARNING_MESSAGE);
             }
         } catch (Exception e) {
-            System.err.println("Error registering custom fonts: " + e.getMessage());
+            System.err.println("Error registering Poppins font: " + e.getMessage());
+        }
+    }
+
+    private void printKOTBill() {
+        DefaultTableModel kotModel = (DefaultTableModel) jTable3.getModel();
+        if (kotModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Please add items to the order before printing KOT.",
+                    "Empty Order", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            registerCustomFonts();
+
+            // Prepare report parameters
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("Parameter6", jTextField3.getText());  // Bill No
+            parameters.put("Parameter9", txtdate.getText() + " " + txttime.getText());  // Date & Time
+
+            // Create data model with EXACT field names from JRXML
+            DefaultTableModel reportModel = new DefaultTableModel(
+                    new Object[][]{},
+                    new String[]{"ID", "Invoice ID", "Status", "Name & Portion"} // Must match JRXML exactly
+            );
+
+            // Add only pending items to report model
+            for (int i = 0; i < kotModel.getRowCount(); i++) {
+                String status = kotModel.getValueAt(i, 2).toString();
+                if ("Pending".equals(status)) {  // Only print pending items
+                    reportModel.addRow(new Object[]{
+                            kotModel.getValueAt(i, 0),
+                            kotModel.getValueAt(i, 1),
+                            kotModel.getValueAt(i, 2),
+                            kotModel.getValueAt(i, 3)
+                    });
+                }
+            }
+
+            if (reportModel.getRowCount() == 0) {
+                JOptionPane.showMessageDialog(this,
+                        "No pending KOT items available to print.",
+                        "Empty Order", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Load and generate report
+            InputStream reportStream = getClass().getResourceAsStream("/reports/heavenly_new_kot.jasper");
+            if (reportStream == null) {
+                JOptionPane.showMessageDialog(this,
+                        "KOT report template not found",
+                        "Report Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            JasperPrint print = JasperFillManager.fillReport(
+                    reportStream,
+                    parameters,
+                    new JRTableModelDataSource(reportModel)
+            );
+
+            if (print.getPages().size() == 0) {
+                JOptionPane.showMessageDialog(this,
+                        "KOT generated but has no pages",
+                        "Report Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            JasperViewer viewer = new JasperViewer(print, false);
+            viewer.setTitle("KOT #" + jTextField3.getText());
+            viewer.setVisible(true);
+
+            // Update status for all printed items
+            for (int i = 0; i < reportModel.getRowCount(); i++) {
+                String productId = reportModel.getValueAt(i, 0).toString();
+                String invoiceId = reportModel.getValueAt(i, 1).toString();
+                updateKOTStatusToDone(productId, invoiceId);
+
+                // Update the table view
+                for (int j = 0; j < kotModel.getRowCount(); j++) {
+                    if (kotModel.getValueAt(j, 0).equals(productId) &&
+                            kotModel.getValueAt(j, 1).equals(invoiceId)) {
+                        kotModel.setValueAt("Done", j, 2);
+                        break;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error generating KOT: " + e.getMessage(),
+                    "Report Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+
+    private void loadKOTItemsFromDB() {
+        DefaultTableModel kotModel = (DefaultTableModel) jTable3.getModel();
+        kotModel.setRowCount(0);
+
+        try (Connection conn = DB.database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(
+                     "SELECT k.id, k.invoice_id, k.status, k.product_name, k.portion, k.quantity, " +
+                             "c.categoryname " +
+                             "FROM kot k " +
+                             "JOIN products p ON k.product_id = p.idproducts " +
+                             "LEFT JOIN category c ON p.category_idcategory = c.idcategory " +
+                             "WHERE k.invoice_id = (SELECT id FROM invoice WHERE invoice_number = ?) " +
+                             "AND k.status = 'Pending'")) {
+
+            pstmt.setString(1, jTextField3.getText());
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String productName = rs.getString("product_name");
+                String portion = rs.getString("portion");
+                int quantity = rs.getInt("quantity");
+                String category = rs.getString("categoryname");
+
+                kotModel.addRow(new Object[]{
+                        rs.getString("id"),
+                        rs.getString("invoice_id"),
+                        rs.getString("status"),
+                        productName + " (" + portion + ") x" + quantity + " (" + (category != null ? category : "Uncategorized") + ")"
+                });
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error loading KOT items: " + e.getMessage(),
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateKOTStatus() {
+        try (Connection conn = DB.database.getConnection(); PreparedStatement pstmt = conn.prepareStatement(
+                "UPDATE kot SET status = 'Done' WHERE invoice_id = ?")) {
+
+            pstmt.setInt(1, Integer.parseInt(jTextField3.getText()));
+            pstmt.executeUpdate();
+
+            // Refresh KOT table
+            loadKOTItemsFromDB();
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error updating KOT status: " + e.getMessage(),
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateKOTStatusToDone(String productId, String invoiceId) {
+        Connection conn = null;
+        try {
+            conn = DB.database.getConnection();
+            conn.setAutoCommit(false);
+
+            String sql = "UPDATE kot SET status = 'Done' WHERE invoice_id = ? AND product_id = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, Integer.parseInt(invoiceId));
+                pstmt.setString(2, productId);
+                pstmt.executeUpdate();
+                conn.commit();
+            }
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error updating KOT status: " + e.getMessage(),
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    // Add this method to get KOT report stream
+    private InputStream getKOTReportStream() {
+        // Try multiple locations for the KOT report template
+        String[] pathsToTry = {
+            "/reports/heavenly_new_kot.jasper", // Assuming you have a separate KOT template
+            "reports/heavenly_new_kot.jasper",
+            "src/reports/heavenly_new_kot.jasper",
+            "/reports/heavenly_new_1.jasper" // Fallback to main template if KOT specific not found
+        };
+
+        for (String path : pathsToTry) {
+            try {
+                InputStream stream = getClass().getResourceAsStream(path);
+                if (stream != null) {
+                    return stream;
+                }
+
+                // Try filesystem if not found in resources
+                java.io.File file = new java.io.File(path);
+                if (file.exists()) {
+                    return new java.io.FileInputStream(file);
+                }
+            } catch (Exception e) {
+                System.out.println("Error checking path: " + path);
+            }
+        }
+        return null;
+    }
+
+    private boolean saveKOTItemsToDB(int invoiceId) {
+        DefaultTableModel orderedItemsModel = (DefaultTableModel) jTable2.getModel();
+        Connection conn = null;
+
+        try {
+            conn = DB.database.getConnection();
+            conn.setAutoCommit(false);
+
+            // Clear existing pending items for this invoice
+            String clearSql = "DELETE FROM kot WHERE invoice_id = ? AND status = 'Pending'";
+            try (PreparedStatement clearStmt = conn.prepareStatement(clearSql)) {
+                clearStmt.setInt(1, invoiceId);
+                clearStmt.executeUpdate();
+            }
+
+            // Insert new items with just invoice_id
+            String insertSql = "INSERT INTO kot (invoice_id, product_id, product_name, portion, quantity, status, created_at) " +
+                    "VALUES (?, ?, ?, ?, ?, 'Pending', NOW())";
+
+            try (PreparedStatement pstmt = conn.prepareStatement(insertSql)) {
+                for (int i = 0; i < orderedItemsModel.getRowCount(); i++) {
+                    String productId = orderedItemsModel.getValueAt(i, 0).toString();
+                    String productName = orderedItemsModel.getValueAt(i, 1).toString();
+                    String portion = orderedItemsModel.getValueAt(i, 2).toString();
+                    int quantity = Integer.parseInt(orderedItemsModel.getValueAt(i, 3).toString());
+
+                    pstmt.setInt(1, invoiceId);
+                    pstmt.setString(2, productId);
+                    pstmt.setString(3, productName);
+                    pstmt.setString(4, portion);
+                    pstmt.setInt(5, quantity);
+                    pstmt.addBatch();
+                }
+                pstmt.executeBatch();
+            }
+
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error saving KOT items: " + e.getMessage(),
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private boolean createInvoiceForKOT(Connection conn) throws SQLException {
+        String invoiceSql = "INSERT INTO invoice (invoice_number, user_id, subtotal, total, paid, balance, is_dine_in, created_at) "
+                + "VALUES (?, ?, 0, 0, 0, 0, ?, NOW())";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(invoiceSql)) {
+            pstmt.setString(1, jTextField3.getText());
+            pstmt.setInt(2, Integer.parseInt(currentUserId));
+            pstmt.setInt(3, jRadioButton1.isSelected() ? 1 : 0);
+            return pstmt.executeUpdate() > 0;
+        }
+    }
+
+    private void loadTodaysKOTBills() {
+        DefaultTableModel kotModel = (DefaultTableModel) jTable3.getModel();
+        kotModel.setRowCount(0);
+
+        try (Connection conn = DB.database.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(
+                     "SELECT k.id, k.invoice_id, k.status, k.product_name, k.portion, k.quantity, " +
+                             "c.categoryname " +
+                             "FROM kot k " +
+                             "JOIN invoice i ON k.invoice_id = i.id " +
+                             "JOIN products p ON k.product_id = p.idproducts " +
+                             "LEFT JOIN category c ON p.category_idcategory = c.idcategory " +
+                             "WHERE DATE(k.created_at) = CURDATE() " +
+                             "AND i.paid >= i.total " + // Only show paid invoices
+                             "ORDER BY k.created_at DESC")) {
+
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                String productName = rs.getString("product_name");
+                String portion = rs.getString("portion");
+                int quantity = rs.getInt("quantity");
+                String category = rs.getString("categoryname");
+
+                kotModel.addRow(new Object[]{
+                        rs.getString("id"),
+                        rs.getString("invoice_id"),
+                        rs.getString("status"),
+                        productName + " (" + portion + ") x" + quantity + " (" + (category != null ? category : "Uncategorized") + ")"
+                });
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error loading today's KOT bills: " + e.getMessage(),
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateKOTTable() {
+        DefaultTableModel orderedItemsModel = (DefaultTableModel) jTable2.getModel();
+        DefaultTableModel kotModel = (DefaultTableModel) jTable3.getModel();
+
+        // Clear only pending items
+        for (int i = kotModel.getRowCount() - 1; i >= 0; i--) {
+            if ("Pending".equals(kotModel.getValueAt(i, 2).toString())) {
+                kotModel.removeRow(i);
+            }
+        }
+
+        // Get or create the actual invoice
+        int invoiceId = getOrCreateInvoiceId(jTextField3.getText());
+        if (invoiceId == -1) {
+            JOptionPane.showMessageDialog(this,
+                    "Failed to create/get invoice",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Save items to KOT table
+        if (!saveKOTItemsToDB(invoiceId)) {
+            JOptionPane.showMessageDialog(this,
+                    "Failed to save KOT items",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Add items to KOT table view
+        for (int i = 0; i < orderedItemsModel.getRowCount(); i++) {
+            String id = orderedItemsModel.getValueAt(i, 0).toString();
+            String name = orderedItemsModel.getValueAt(i, 1).toString();
+            String portion = orderedItemsModel.getValueAt(i, 2).toString();
+            int count = Integer.parseInt(orderedItemsModel.getValueAt(i, 3).toString());
+            String category = findCategoryForProduct(id);
+
+            kotModel.addRow(new Object[]{
+                    id,
+                    jTextField3.getText(), // Display invoice number from form
+                    "Pending",
+                    name + " (" + portion + ") x" + count + " (" + category + ")"
+            });
+        }
+    }
+
+
+    private boolean removeKOTItem(String kotId, String invoiceId) {
+        Connection conn = null;
+        try {
+            conn = DB.database.getConnection();
+            conn.setAutoCommit(false);
+
+            // Delete the KOT item
+            String deleteSql = "DELETE FROM kot WHERE id = ? AND invoice_id = ?";
+            try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+                deleteStmt.setString(1, kotId);
+                deleteStmt.setInt(2, Integer.parseInt(invoiceId));
+                int rowsAffected = deleteStmt.executeUpdate();
+
+                if (rowsAffected == 0) {
+                    JOptionPane.showMessageDialog(this,
+                            "KOT item not found in database",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            // Check if this was the last KOT item for this invoice
+            String checkSql = "SELECT COUNT(*) AS kot_count FROM kot WHERE invoice_id = ?";
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                checkStmt.setInt(1, Integer.parseInt(invoiceId));
+                ResultSet rs = checkStmt.executeQuery();
+                if (rs.next() && rs.getInt("kot_count") == 0) {
+                    // Delete the invoice if no KOT items remain
+                    String deleteInvoiceSql = "DELETE FROM invoice WHERE id = ?";
+                    try (PreparedStatement deleteInvoiceStmt = conn.prepareStatement(deleteInvoiceSql)) {
+                        deleteInvoiceStmt.setInt(1, Integer.parseInt(invoiceId));
+                        deleteInvoiceStmt.executeUpdate();
+                    }
+                }
+            }
+
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw new RuntimeException("Failed to remove KOT item", e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private int getOrCreateInvoiceId(String invoiceNumber) {
+        Connection conn = null;
+        try {
+            conn = DB.database.getConnection();
+
+            // First try to get existing invoice
+            String selectSql = "SELECT id FROM invoice WHERE invoice_number = ?";
+            try (PreparedStatement selectStmt = conn.prepareStatement(selectSql)) {
+                selectStmt.setString(1, invoiceNumber);
+                ResultSet rs = selectStmt.executeQuery();
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+            }
+
+            // If not exists, create new invoice
+            conn.setAutoCommit(false);
+            String insertSql = "INSERT INTO invoice (invoice_number, user_id, subtotal, total, paid, balance, is_dine_in, created_at) "
+                    + "VALUES (?, ?, 0, 0, 0, 0, ?, NOW())";
+
+            try (PreparedStatement insertStmt = conn.prepareStatement(insertSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                insertStmt.setString(1, invoiceNumber);
+                insertStmt.setInt(2, Integer.parseInt(currentUserId));
+                insertStmt.setInt(3, jRadioButton1.isSelected() ? 1 : 0);
+                insertStmt.executeUpdate();
+
+                try (ResultSet rs = insertStmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        int newId = rs.getInt(1);
+                        conn.commit();
+                        return newId;
+                    }
+                }
+            }
+
+            conn.rollback();
+            return -1;
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            e.printStackTrace();
+            return -1;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -1146,6 +1867,7 @@ public class userhome extends javax.swing.JFrame {
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
+    private javax.swing.JButton jButton5;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel2;
