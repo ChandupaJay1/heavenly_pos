@@ -27,6 +27,7 @@ import net.sf.jasperreports.view.JasperViewer;
 import javax.swing.Timer;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -377,55 +378,75 @@ public class userhome extends javax.swing.JFrame {
         closeconfirm();
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    private void jTextField1KeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField1KeyTyped
-        // This method is for filtering non-alphabetic characters.
-        // The actual search logic is better placed in keyReleased.
-        char c = evt.getKeyChar();
-        if (!(Character.isAlphabetic(c) || Character.isWhitespace(c) || Character.isISOControl(c))) {
-            evt.consume();
-        }
-    }//GEN-LAST:event_jTextField1KeyTyped
+    private void jTextField1KeyTyped(java.awt.event.KeyEvent evt) {
+        performSearch(jTextField1.getText());
+    }
 
     private void jTextField1KeyReleased(java.awt.event.KeyEvent evt) {
-        try {
-            DefaultTableModel dtm = (DefaultTableModel) jTable1.getModel();
-            dtm.setRowCount(0);
 
-            String searchText = jTextField1.getText() + "%";
-            String sql = "SELECT p.idproducts, c.categoryname, p.name, p.portion, p.price "
-                    + "FROM products p LEFT JOIN category c ON p.category_idcategory = c.idcategory "
-                    + "WHERE (p.name LIKE ? OR p.idproducts LIKE ?) "
-                    + "AND p.status IN ('active', 'done')";
+    }
 
-            try (Connection conn = DB.database.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    private void performSearch(String searchText) {
+        if (!searchText.isEmpty()) {
+            try {
+                DefaultTableModel dtm = (DefaultTableModel) jTable1.getModel();
+                dtm.setRowCount(0);
 
-                pstmt.setString(1, searchText);
-                pstmt.setString(2, searchText);
+                // Modified query to search both name and category
+                String sql = "SELECT p.idproducts, c.categoryname, p.name, p.portion, p.price "
+                        + "FROM products p "
+                        + "JOIN category c ON p.category_idcategory = c.idcategory "
+                        + "WHERE (p.name LIKE ? OR c.categoryname LIKE ?) "  // Search both fields
+                        + "AND p.status = 'active' "
+                        + "ORDER BY c.categoryname, p.name";  // Better sorting
 
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    while (rs.next()) {
-                        Vector<String> v = new Vector<>();
-                        v.add(rs.getString("idproducts"));
+                try (Connection conn = DB.database.getConnection();
+                     PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-                        String category = rs.getString("categoryname");
-                        v.add(category != null ? category : "Uncategorized");
+                    // Set parameters for both name and category search
+                    String searchPattern = "%" + searchText + "%";
+                    pstmt.setString(1, searchPattern);
+                    pstmt.setString(2, searchPattern);
 
-                        v.add(rs.getString("name"));
-                        v.add(rs.getString("portion"));
-                        v.add(String.format("%.2f", rs.getDouble("price")));
-                        dtm.addRow(v);
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        boolean found = false;
+
+                        while (rs.next()) {
+                            found = true;
+                            Vector<String> v = new Vector<>();
+                            v.add(rs.getString("idproducts"));
+                            v.add(rs.getString("categoryname") != null
+                                    ? rs.getString("categoryname") : "Uncategorized");
+                            v.add(rs.getString("name"));
+                            v.add(rs.getString("portion"));
+                            v.add(String.format("%.2f", rs.getDouble("price")));
+                            dtm.addRow(v);
+                        }
+
+                        if (!found) {
+                            // Optional: Show no results message
+                            // JOptionPane.showMessageDialog(...);
+                        }
                     }
                 }
+            } catch (SQLException e) {
+                handleError("Database error", e);
+            } catch (Exception e) {
+                handleError("Unexpected error", e);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this,
-                    "Error searching products: " + e.getMessage(),
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
+        } else {
+            loadtable();
         }
     }
 
-
+    private void handleError(String message, Exception e) {
+        System.err.println(message + ": " + e.getMessage());
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this,
+                message + ": " + e.getMessage(),
+                "Error", JOptionPane.ERROR_MESSAGE);
+    }
+    
     private void jTextField3KeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField3KeyTyped
         // Invoice ID is auto-generated and set to non-editable, so this might not be needed.
         char c = evt.getKeyChar();
@@ -695,7 +716,7 @@ public class userhome extends javax.swing.JFrame {
                 e.printStackTrace();
             }
         }
-    } //GEN-LAST:event_jButton5ActionPerformed
+    }
 
     private void jTable3MouseClicked(java.awt.event.MouseEvent evt) {
         int selectedRow = jTable3.getSelectedRow();
@@ -712,7 +733,7 @@ public class userhome extends javax.swing.JFrame {
                 printSelectedKOTItem(selectedRow);
             }
         }
-    }                                     
+    }
 
     private void jTextField5ActionPerformed(java.awt.event.ActionEvent evt) {
         if (!jTextField5.getText().isEmpty()) {
@@ -816,11 +837,11 @@ public class userhome extends javax.swing.JFrame {
                     }
 
                     reportModel.addRow(new Object[]{
-                            productName,
-                            category,
-                            portion,
-                            count,
-                            price
+                        productName,
+                        category,
+                        portion,
+                        count,
+                        price
                     });
                 } catch (Exception e) {
                     System.err.println("Error processing row " + i + ": " + e.getMessage());
@@ -874,12 +895,11 @@ public class userhome extends javax.swing.JFrame {
 
     private String findCategoryForProduct(String productId) {
         String category = "Uncategorized";
-        try (Connection conn = DB.database.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(
-                     "SELECT c.categoryname " +
-                             "FROM products p " +
-                             "LEFT JOIN category c ON p.category_idcategory = c.idcategory " +
-                             "WHERE p.idproducts = ?")) {
+        try (Connection conn = DB.database.getConnection(); PreparedStatement pstmt = conn.prepareStatement(
+                "SELECT c.categoryname "
+                + "FROM products p "
+                + "LEFT JOIN category c ON p.category_idcategory = c.idcategory "
+                + "WHERE p.idproducts = ?")) {
 
             pstmt.setString(1, productId);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -921,10 +941,10 @@ public class userhome extends javax.swing.JFrame {
             );
 
             reportModel.addRow(new Object[]{
-                    id,
-                    invoiceId,
-                    status,
-                    namePortion
+                id,
+                invoiceId,
+                status,
+                namePortion
             });
 
             // Load and generate report
@@ -979,8 +999,7 @@ public class userhome extends javax.swing.JFrame {
             // First check if invoice number already exists
             String invoiceNumber = jTextField3.getText();
             String checkSql = "SELECT id FROM invoice WHERE invoice_number = ?";
-            try (Connection checkConn = DB.database.getConnection();
-                 PreparedStatement checkStmt = checkConn.prepareStatement(checkSql)) {
+            try (Connection checkConn = DB.database.getConnection(); PreparedStatement checkStmt = checkConn.prepareStatement(checkSql)) {
                 checkStmt.setString(1, invoiceNumber);
                 ResultSet rs = checkStmt.executeQuery();
                 if (rs.next()) {
@@ -1083,9 +1102,9 @@ public class userhome extends javax.swing.JFrame {
     private InputStream getReportStream() {
         // Try multiple locations for the report template
         String[] pathsToTry = {
-            "/reports/heavenly_new_1.jasper",
-            "reports/heavenly_new_1.jasper",
-            "src/reports/heavenly_new_1.jasper"
+            "/reports/heavenly_new.jasper",
+            "reports/heavenly_new.jasper",
+            "src/reports/heavenly_new.jasper"
         };
 
         for (String path : pathsToTry) {
@@ -1158,8 +1177,8 @@ public class userhome extends javax.swing.JFrame {
             conn = DB.database.getConnection();
             conn.setAutoCommit(false);
 
-            String sql = "INSERT INTO invoice (invoice_number, user_id, subtotal, total, paid, balance, is_dine_in, created_at) " +
-                    "VALUES (?, ?, 0, 0, 0, 0, ?, NOW())";
+            String sql = "INSERT INTO invoice (invoice_number, user_id, subtotal, total, paid, balance, is_dine_in, created_at) "
+                    + "VALUES (?, ?, 0, 0, 0, 0, ?, NOW())";
 
             try (PreparedStatement pstmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
                 pstmt.setString(1, invoiceNumber);
@@ -1178,14 +1197,22 @@ public class userhome extends javax.swing.JFrame {
             return -1;
         } catch (Exception e) {
             if (conn != null) {
-                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             }
             e.printStackTrace();
             return -1;
         } finally {
             if (conn != null) {
-                try { conn.setAutoCommit(true); conn.close(); }
-                catch (SQLException e) { e.printStackTrace(); }
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -1316,7 +1343,6 @@ public class userhome extends javax.swing.JFrame {
         jRadioButton2.setSelected(true); // Take away
     }
 
-
     private void registerCustomFonts() {
         try {
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -1358,10 +1384,10 @@ public class userhome extends javax.swing.JFrame {
                 String status = kotModel.getValueAt(i, 2).toString();
                 if ("Pending".equals(status)) {  // Only print pending items
                     reportModel.addRow(new Object[]{
-                            kotModel.getValueAt(i, 0),
-                            kotModel.getValueAt(i, 1),
-                            kotModel.getValueAt(i, 2),
-                            kotModel.getValueAt(i, 3)
+                        kotModel.getValueAt(i, 0),
+                        kotModel.getValueAt(i, 1),
+                        kotModel.getValueAt(i, 2),
+                        kotModel.getValueAt(i, 3)
                     });
                 }
             }
@@ -1407,8 +1433,8 @@ public class userhome extends javax.swing.JFrame {
 
                 // Update the table view
                 for (int j = 0; j < kotModel.getRowCount(); j++) {
-                    if (kotModel.getValueAt(j, 0).equals(productId) &&
-                            kotModel.getValueAt(j, 1).equals(invoiceId)) {
+                    if (kotModel.getValueAt(j, 0).equals(productId)
+                            && kotModel.getValueAt(j, 1).equals(invoiceId)) {
                         kotModel.setValueAt("Done", j, 2);
                         break;
                     }
@@ -1423,20 +1449,18 @@ public class userhome extends javax.swing.JFrame {
         }
     }
 
-
     private void loadKOTItemsFromDB() {
         DefaultTableModel kotModel = (DefaultTableModel) jTable3.getModel();
         kotModel.setRowCount(0);
 
-        try (Connection conn = DB.database.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(
-                     "SELECT k.id, k.invoice_id, k.status, k.product_name, k.portion, k.quantity, " +
-                             "c.categoryname " +
-                             "FROM kot k " +
-                             "JOIN products p ON k.product_id = p.idproducts " +
-                             "LEFT JOIN category c ON p.category_idcategory = c.idcategory " +
-                             "WHERE k.invoice_id = (SELECT id FROM invoice WHERE invoice_number = ?) " +
-                             "AND k.status = 'Pending'")) {
+        try (Connection conn = DB.database.getConnection(); PreparedStatement pstmt = conn.prepareStatement(
+                "SELECT k.id, k.invoice_id, k.status, k.product_name, k.portion, k.quantity, "
+                + "c.categoryname "
+                + "FROM kot k "
+                + "JOIN products p ON k.product_id = p.idproducts "
+                + "LEFT JOIN category c ON p.category_idcategory = c.idcategory "
+                + "WHERE k.invoice_id = (SELECT id FROM invoice WHERE invoice_number = ?) "
+                + "AND k.status = 'Pending'")) {
 
             pstmt.setString(1, jTextField3.getText());
             ResultSet rs = pstmt.executeQuery();
@@ -1448,10 +1472,10 @@ public class userhome extends javax.swing.JFrame {
                 String category = rs.getString("categoryname");
 
                 kotModel.addRow(new Object[]{
-                        rs.getString("id"),
-                        rs.getString("invoice_id"),
-                        rs.getString("status"),
-                        productName + " (" + portion + ") x" + quantity + " (" + (category != null ? category : "Uncategorized") + ")"
+                    rs.getString("id"),
+                    rs.getString("invoice_id"),
+                    rs.getString("status"),
+                    productName + " (" + portion + ") x" + quantity + " (" + (category != null ? category : "Uncategorized") + ")"
                 });
             }
         } catch (Exception e) {
@@ -1523,7 +1547,7 @@ public class userhome extends javax.swing.JFrame {
             "/reports/heavenly_new_kot.jasper", // Assuming you have a separate KOT template
             "reports/heavenly_new_kot.jasper",
             "src/reports/heavenly_new_kot.jasper",
-            "/reports/heavenly_new_1.jasper" // Fallback to main template if KOT specific not found
+            "/reports/heavenly_new.jasper" // Fallback to main template if KOT specific not found
         };
 
         for (String path : pathsToTry) {
@@ -1561,8 +1585,8 @@ public class userhome extends javax.swing.JFrame {
             }
 
             // Insert new items with just invoice_id
-            String insertSql = "INSERT INTO kot (invoice_id, product_id, product_name, portion, quantity, status, created_at) " +
-                    "VALUES (?, ?, ?, ?, ?, 'Pending', NOW())";
+            String insertSql = "INSERT INTO kot (invoice_id, product_id, product_name, portion, quantity, status, created_at) "
+                    + "VALUES (?, ?, ?, ?, ?, 'Pending', NOW())";
 
             try (PreparedStatement pstmt = conn.prepareStatement(insertSql)) {
                 for (int i = 0; i < orderedItemsModel.getRowCount(); i++) {
@@ -1624,17 +1648,17 @@ public class userhome extends javax.swing.JFrame {
         DefaultTableModel kotModel = (DefaultTableModel) jTable3.getModel();
         kotModel.setRowCount(0);
 
-        try (Connection conn = DB.database.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(
-                     "SELECT k.id, k.invoice_id, k.status, k.product_name, k.portion, k.quantity, " +
-                             "c.categoryname " +
-                             "FROM kot k " +
-                             "JOIN invoice i ON k.invoice_id = i.id " +
-                             "JOIN products p ON k.product_id = p.idproducts " +
-                             "LEFT JOIN category c ON p.category_idcategory = c.idcategory " +
-                             "WHERE DATE(k.created_at) = CURDATE() " +
-                             "AND i.paid >= i.total " + // Only show paid invoices
-                             "ORDER BY k.created_at DESC")) {
+        try (Connection conn = DB.database.getConnection(); PreparedStatement pstmt = conn.prepareStatement(
+                "SELECT k.id, k.invoice_id, k.status, k.product_name, k.portion, k.quantity, "
+                + "c.categoryname "
+                + "FROM kot k "
+                + "JOIN invoice i ON k.invoice_id = i.id "
+                + "JOIN products p ON k.product_id = p.idproducts "
+                + "LEFT JOIN category c ON p.category_idcategory = c.idcategory "
+                + "WHERE DATE(k.created_at) = CURDATE() "
+                + "AND i.paid >= i.total "
+                + // Only show paid invoices
+                "ORDER BY k.created_at DESC")) {
 
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -1644,10 +1668,10 @@ public class userhome extends javax.swing.JFrame {
                 String category = rs.getString("categoryname");
 
                 kotModel.addRow(new Object[]{
-                        rs.getString("id"),
-                        rs.getString("invoice_id"),
-                        rs.getString("status"),
-                        productName + " (" + portion + ") x" + quantity + " (" + (category != null ? category : "Uncategorized") + ")"
+                    rs.getString("id"),
+                    rs.getString("invoice_id"),
+                    rs.getString("status"),
+                    productName + " (" + portion + ") x" + quantity + " (" + (category != null ? category : "Uncategorized") + ")"
                 });
             }
         } catch (Exception e) {
@@ -1697,14 +1721,13 @@ public class userhome extends javax.swing.JFrame {
             String category = findCategoryForProduct(id);
 
             kotModel.addRow(new Object[]{
-                    id,
-                    jTextField3.getText(), // Display invoice number from form
-                    "Pending",
-                    name + " (" + portion + ") x" + count + " (" + category + ")"
+                id,
+                jTextField3.getText(), // Display invoice number from form
+                "Pending",
+                name + " (" + portion + ") x" + count + " (" + category + ")"
             });
         }
     }
-
 
     private boolean removeKOTItem(String kotId, String invoiceId) {
         Connection conn = null;
